@@ -1,7 +1,7 @@
 const {User} = require('../models/models')
 
 class UserController {
-    static async create (req, res, next){
+    static async createUser (req, res, next){
         try {
             const user = await User.create(req.body)
             res.status(201).json(user)

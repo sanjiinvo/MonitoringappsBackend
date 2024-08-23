@@ -17,7 +17,7 @@ User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: false },
   password: { type: DataTypes.STRING },
-  role: { type: DataTypes.STRING, defaultValue: 'user' },
+  rolename: { type: DataTypes.STRING, defaultValue: 'user' },
   departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
   currentprocesses: { type: DataTypes.ARRAY(DataTypes.STRING) },
 }, {
@@ -92,7 +92,7 @@ ProcessDependency.init({}, {
 });
 
 // Ассоциации
-User.belongsTo(Role);
+User.belongsTo(Role, {as: 'role'  });
 User.belongsTo(Department);
 ObjectModel.belongsTo(Department);
 Process.belongsTo(Department);
