@@ -1,7 +1,7 @@
 const {Role} = require('../models/models')
 
 class RoleController {
-    static async create (req, res, next){
+    static async createRole (req, res, next){
         try {
             const role = await Role.create(req.body)
             res.status(201).json(role)
