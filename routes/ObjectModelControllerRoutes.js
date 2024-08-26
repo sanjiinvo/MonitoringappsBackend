@@ -1,5 +1,6 @@
 const express = require('express');
 const ObjectModelController = require('../controllers/ObjectModelController');
+const auth = require('../middlewares/auth');
 
 const router = express.Router();
 

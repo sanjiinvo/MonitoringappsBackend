@@ -1,6 +1,6 @@
 const {User, Role} = require('../models/models')
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 class UserController {
     static async createUser (req, res, next){

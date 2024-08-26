@@ -23,6 +23,15 @@ class DepartmentController {
     }
   }
 
+  static async getAllDepartments(req, res) {
+    try {
+      const departments = await Department.findAll();
+      res.status(200).json(departments);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   static async updateDepartment(req, res) {
     try {
       const department = await Department.findByPk(req.params.id);
