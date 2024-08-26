@@ -22,7 +22,14 @@ class ProcessController {
       res.status(400).json({ error: error.message });
     }
   }
-
+  static async getAllProcesses(req, res) {
+    try {
+      const processes = await Process.findAll();
+      res.status(200).json(processes);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
   static async updateProcess(req, res) {
     try {
       const process = await Process.findByPk(req.params.id);

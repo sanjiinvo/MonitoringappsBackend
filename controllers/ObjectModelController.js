@@ -24,6 +24,18 @@ class ObjectModelController {
   }
   static async getAllObjectModels(req, res) {
     try {
+      const objectModels = await ObjectModel.findAll({
+        where: {
+          departmentId: req.params.departmentId,
+        },
+      });
+      res.status(200).json(objectModels);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+  static async getAllObjectModels(req, res) {
+    try {
       const objectModels = await ObjectModel.findAll();
       res.status(200).json(objectModels);
     } catch (error) {

@@ -19,6 +19,15 @@ class RoleController {
             res.status(500).json({error: error.message})
         }
     }
+    
+    static async getAllRoles(req, res, next){
+      try {
+        const roles = await Role.findAll();
+        res.json(roles);
+      } catch (error) {
+        res.status(400).json({ error: error.message });
+      }
+    }
 
     static async updateRole(req, res) {
         try {

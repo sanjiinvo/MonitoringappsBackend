@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const sequelize = require('../db'); // Импортируйте ваше подключение к базе данных
-
+const bcrypt = require('bcrypt');
 // Определение модели Department
 class Department extends Model {}
 Department.init({
@@ -15,9 +15,14 @@ Department.init({
 class User extends Model {}
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  username: { type: DataTypes.STRING, unique: false },
-  password: { type: DataTypes.STRING },
-  rolename: { type: DataTypes.STRING, defaultValue: 'user' },
+  username: { type: DataTypes.STRING, unique: true },
+  password: { type: DataTypes.STRING, allowNull: false },
+  rolename: { type: DataTypes.STRING, defaultValue: 'User',
+    set(value) {
+      const salt = bcrypt.genSaltSync(10)
+      this.setDataValue('password', bcrypt.hashSync(value, salt));
+    }
+   },
   departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
   currentprocesses: { type: DataTypes.ARRAY(DataTypes.STRING) },
 }, {
