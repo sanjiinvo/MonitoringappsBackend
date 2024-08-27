@@ -20,10 +20,7 @@ User.init({
   password: { 
     type: DataTypes.STRING, 
     allowNull: false,
-    set(value) {
-      const salt = bcrypt.genSaltSync(10);
-      this.setDataValue('password', bcrypt.hashSync(value, salt));
-    }
+
   },
   rolename: { 
     type: DataTypes.STRING, 
