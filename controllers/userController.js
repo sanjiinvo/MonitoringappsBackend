@@ -1,60 +1,63 @@
 const { User, Role } = require('../models/models');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { json } = require('sequelize');
 
 class UserController {
-    static async createUser(req, res, next) {
-        try {
-            const { username, password, rolename, department } = req.body;
-            const userExists = await User.findOne({ where: { username } });
-            
-            if (userExists) {
-                return res.status(400).json({ error: 'User already exists' });
-            }
+  static async createUser(req, res, next) {
+    try {
+      const { username, password, rolename, department } = req.body;
+      
+      // Хешируем пароль
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const unhashedpassword = await bcrypt.compare(password, hashedPassword)
+      console.log(unhashedpassword);
+      
+      // Создаем пользователя с хешированным паролем
+      const user = await User.create({
+          username,
+          password: hashedPassword,
+          rolename,
+          department
+      });
 
-            // Хешируем пароль перед созданием пользователя
-            const hashedPassword = await bcrypt.hash(password, 10);
+      res.status(201).json(user);
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
+}
 
-            const user = await User.create({ 
-                username, 
-                password: hashedPassword,  // Сохраняем хешированный пароль
-                rolename, 
-                department 
-            });
-            res.status(201).json(user);
-        } catch (error) {
-            res.status(400).json({ error: error.message });
+
+static async logIn(req, res, next) {
+  try {
+        const { username, password } = req.body;
+        console.log(username, password);
+        
+        const user = await User.findOne({ where: { username } });
+        console.log(user);
+        
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
         }
-    }
-
-    static async logIn(req, res, next) {
-        try {
-            const { username, password } = req.body;
-
-            // Логируем полученные данные
-            console.log('Logging in user:', username);
-
-            const user = await User.findOne({ where: { username } });
-            if (!user) {
-                return res.status(401).json({ error: 'User not found' });
-            }
-
-            // Проверка пароля
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ error: 'Password is incorrect' });
-            }
-
-            // Создание токена
-            const payload = { id: user.id, username: user.username, role: user.rolename };
-            const token = jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: '1h' });
-
-            res.json({ token });
-        } catch (error) {
-            console.error('Login error:', error);  // Логируем ошибку
-            res.status(500).json({ error: error.message });
+        console.log(password);
+        
+        const isMatch = await bcrypt.compare(password, user.password);
+        console.log(password);
+        console.log(user.username, user.password);
+        
+        
+        console.log(isMatch);
+        
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Password is incorrect' });
         }
+
+        const token = jwt.sign({ id: user.id, username: user.username, role: user.rolename }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
+}
 
     static async getUser(req, res, next) {
         try {

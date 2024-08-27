@@ -4,7 +4,7 @@ const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.post('/user', auth(['Admin']), UserController.createUser)
+router.post('/newuser', UserController.createUser)
 router.get('/user/:id',auth(), UserController.getUser)
 router.put('/user/:id', auth(), UserController.updateUser)
 router.delete('/user/:id', auth(), UserController.deleteUser)

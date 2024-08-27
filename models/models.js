@@ -13,22 +13,31 @@ Department.init({
 
 // Определение модели User
 class User extends Model {}
+
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: true },
-  password: { type: DataTypes.STRING, allowNull: false },
-  rolename: { type: DataTypes.STRING, defaultValue: 'User',
+  password: { 
+    type: DataTypes.STRING, 
+    allowNull: false,
     set(value) {
-      const salt = bcrypt.genSaltSync(10)
+      const salt = bcrypt.genSaltSync(10);
       this.setDataValue('password', bcrypt.hashSync(value, salt));
     }
-   },
+  },
+  rolename: { 
+    type: DataTypes.STRING, 
+    defaultValue: 'User'  // Убедитесь, что роль по умолчанию — 'User', если это необходимо
+  },
   departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
   currentprocesses: { type: DataTypes.ARRAY(DataTypes.STRING) },
 }, {
   sequelize,
   modelName: 'user',
 });
+
+module.exports = User;
+
 
 // Определение модели Role
 class Role extends Model {}
