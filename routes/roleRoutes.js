@@ -4,7 +4,7 @@ const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.post('/roles', auth(['Admin', 'Moder']), RoleController.createRole);
+router.post('/newrole', auth(['Admin', 'Moder']), RoleController.createRole);
 router.get('/roles/:id', auth(), RoleController.getRole);
 router.put('/roles/:id', auth(), RoleController.updateRole);
 router.delete('/roles/:id', auth(), RoleController.deleteRole);

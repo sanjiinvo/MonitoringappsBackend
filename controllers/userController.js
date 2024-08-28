@@ -47,7 +47,7 @@ static async logIn(req, res, next) {
     }
 
     const token = jwt.sign({ id: user.id, username: user.username, role: user.rolename }, process.env.SECRET_KEY, { expiresIn: '1h' });
-    res.json({ token });
+    res.json({ token, username: user.username, role: user.rolename });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
