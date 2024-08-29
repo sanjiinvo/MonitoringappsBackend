@@ -6,7 +6,7 @@ const { json } = require('sequelize');
 class UserController {
   static async createUser(req, res, next) {
     try {
-      const { username, password, rolename, department } = req.body;
+      const { username, rlname, password, rolename, department } = req.body;
       
       // Хешируем пароль
       const hashedPassword = await bcrypt.hash(password, 10)
@@ -14,6 +14,7 @@ class UserController {
       // Создаем пользователя с хешированным паролем
       const user = await User.create({
           username,
+          rlname,
           password: hashedPassword,
           rolename,
           department
@@ -46,8 +47,8 @@ static async logIn(req, res, next) {
       return res.status(401).json({ error: 'Password is incorrect' });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.rolename }, process.env.SECRET_KEY, { expiresIn: '1h' });
-    res.json({ token, username: user.username, role: user.rolename });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.rolename }, process.env.SECRET_KEY, { expiresIn: '24h' });
+    res.json({ token, username: user.username, role: user.rolename, rlname:user.rlname });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -1,24 +1,31 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = (roles = []) =>{
-    if( typeof roles ==='string'){
-        roles = [roles]
+module.exports = (roles = []) => {
+    if (typeof roles === 'string') {
+        roles = [roles];
     }
-    return (req, res, next) => {
-        const token = req.headers['authorization']
 
-        if(!token){
-            return res.status(401).json({error: 'No token provided'})
+    return (req, res, next) => {
+        const token = req.headers['authorization'];
+
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
         }
+
         try {
-            const decoded = jwt.verify(token, process.env.SECRET_KEY)
-            req.user = decoded
-            if(!roles.length && !roles.includes(decoded.role)){
-                return res.status(403).json({error: 'forbidden'})
+            // Убираем слово "Bearer" из токена
+            const tokenWithoutBearer = token.split(' ')[1];
+            const decoded = jwt.verify(tokenWithoutBearer, process.env.SECRET_KEY);
+            req.user = decoded;
+
+            // Если массив roles пуст, доступ разрешен для всех
+            if (roles.length && !roles.includes(decoded.role)) {
+                return res.status(403).json({ error: 'Forbidden' });
             }
-            next()
+
+            next();
         } catch (error) {
-            res.status(401).json({error: 'Token is invalid'})
+            return res.status(401).json({ error: 'Token is invalid' });
         }
-    }
-}
+    };
+};

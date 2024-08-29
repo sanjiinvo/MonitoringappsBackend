@@ -17,6 +17,7 @@ class User extends Model {}
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: true },
+  rlname:{type: DataTypes.STRING, unique: false},
   password: { 
     type: DataTypes.STRING, 
     allowNull: false,

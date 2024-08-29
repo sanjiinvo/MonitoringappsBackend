@@ -3,7 +3,7 @@ const DepartmentController = require('../controllers/DepartmentController');
 const auth = require('../middlewares/auth');
 
 const router = express.Router();
-auth(['Admin', 'Moder']),
+// auth(['Admin', 'Moder']),
 router.post('/newdepartment',  DepartmentController.createDepartment);
 router.get('/departments', auth(), DepartmentController.getAllDepartments);
 router.get('/department/:id', auth(), DepartmentController.getDepartment);
