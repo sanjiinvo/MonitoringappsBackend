@@ -6,7 +6,7 @@ const { json } = require('sequelize');
 class UserController {
   static async createUser(req, res, next) {
     try {
-      const { username, rlname, password, rolename, department } = req.body;
+      const { username, rlname, password, rolename, departmentId } = req.body;
       
       // Хешируем пароль
       const hashedPassword = await bcrypt.hash(password, 10)
@@ -17,7 +17,7 @@ class UserController {
           rlname,
           password: hashedPassword,
           rolename,
-          department
+          departmentId
       });
 
       res.status(201).json(user);
