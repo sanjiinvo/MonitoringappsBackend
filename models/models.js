@@ -10,24 +10,43 @@ Department.init({
   sequelize,
   modelName: 'department',
 });
-
+class Role extends Model {}
+Role.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  roleName: { type: DataTypes.STRING, unique: true },
+}, {
+  sequelize,
+  modelName: 'role',
+});
 // Определение модели User
 class User extends Model {}
 
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: true },
-  rlname:{type: DataTypes.STRING, unique: false},
+  rlname: { type: DataTypes.STRING, allowNull: false },
   password: { 
     type: DataTypes.STRING, 
     allowNull: false,
-
   },
   rolename: { 
     type: DataTypes.STRING, 
-    defaultValue: 'User'  // Убедитесь, что роль по умолчанию — 'User', если это необходимо
+    defaultValue: 'User'  // Убедитесь, что роль по умолчанию — 'User'
   },
-  departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
+  roleId: { 
+    type: DataTypes.INTEGER, 
+    references: { 
+      model: Role, 
+      key: 'id' 
+    }
+  },
+  departmentId: { 
+    type: DataTypes.INTEGER, 
+    references: { 
+      model: Department, 
+      key: 'id' 
+    }
+  },
   currentprocesses: { type: DataTypes.ARRAY(DataTypes.STRING) },
 }, {
   sequelize,
@@ -38,14 +57,7 @@ module.exports = User;
 
 
 // Определение модели Role
-class Role extends Model {}
-Role.init({
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  roleName: { type: DataTypes.STRING, unique: true },
-}, {
-  sequelize,
-  modelName: 'role',
-});
+
 
 // Определение модели ObjectModel
 class ObjectModel extends Model {}
@@ -104,10 +116,10 @@ ProcessDependency.init({}, {
 });
 
 // Ассоциации
-User.belongsTo(Role, {as: 'role'  });
-User.belongsTo(Department);
-ObjectModel.belongsTo(Department);
-Process.belongsTo(Department);
+User.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });
+User.belongsTo(Department, { foreignKey: 'departmentId' });
+ObjectModel.belongsTo(Department, { foreignKey: 'departmentId' });
+Process.belongsTo(Department, { foreignKey: 'departmentId' });
 
 User.belongsToMany(ObjectModel, { through: UserObjectAssociation });
 ObjectModel.belongsToMany(User, { through: UserObjectAssociation });
