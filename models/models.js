@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../db'); // Импортируйте ваше подключение к базе данных
+const sequelize = require('../db'); 
 const bcrypt = require('bcrypt');
+
 // Определение модели Department
 class Department extends Model {}
 Department.init({
@@ -10,6 +11,8 @@ Department.init({
   sequelize,
   modelName: 'department',
 });
+
+// Определение модели Role
 class Role extends Model {}
 Role.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -18,6 +21,7 @@ Role.init({
   sequelize,
   modelName: 'role',
 });
+
 // Определение модели User
 class User extends Model {}
 
@@ -31,7 +35,7 @@ User.init({
   },
   rolename: { 
     type: DataTypes.STRING, 
-    defaultValue: 'User'  // Убедитесь, что роль по умолчанию — 'User'
+    defaultValue: 'User' 
   },
   roleId: { 
     type: DataTypes.INTEGER, 
@@ -53,12 +57,6 @@ User.init({
   modelName: 'user',
 });
 
-module.exports = User;
-
-
-// Определение модели Role
-
-
 // Определение модели ObjectModel
 class ObjectModel extends Model {}
 ObjectModel.init({
@@ -69,7 +67,7 @@ ObjectModel.init({
   startData: { type: DataTypes.DATE },
   endData: { type: DataTypes.DATE },
   status: { type: DataTypes.STRING },
-  departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
+  departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
 }, {
   sequelize,
   modelName: 'object',
@@ -81,10 +79,14 @@ Process.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, unique: false },
   description: { type: DataTypes.STRING },
-  startData: { type: DataTypes.DATE },
-  endData: { type: DataTypes.DATE },
-  status: { type: DataTypes.STRING },
-  departmentId: { type: DataTypes.INTEGER, references: { model: 'departments', key: 'id' }},
+  startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+  endData: { type: DataTypes.DATE,defaultValue: Sequelize.NOW },
+  workingTime: { type: DataTypes.STRING },
+  status: { 
+    type: DataTypes.ENUM('в ожидании', 'в работе', 'завершено', 'ожидание'), 
+    defaultValue: 'в ожидании' 
+  },
+  departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
 }, {
   sequelize,
   modelName: 'process',

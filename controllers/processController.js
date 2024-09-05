@@ -1,14 +1,37 @@
-const { Process } = require('../models/models');
+const { Process, ProcessDependency, Department, ObjectModel } = require('../models/models');
+
 
 class ProcessController {
-  static async createProcess(req, res) {
+  static async createProcess(req, res, next) {
     try {
-      const process = await Process.create(req.body);
-      res.status(201).json(process);
+        const { name, description, workingTime, departmentId, dependencies } = req.body;
+
+        // Создание самого процесса
+        const newProcess = await Process.create({
+            name,
+            description,
+            workingTime,
+            departmentId,
+            status: 'в ожидании'
+        });
+
+        // Добавление зависимостей
+        if (dependencies && dependencies.length > 0) {
+            await Promise.all(dependencies.map(async (dependencyId) => {
+                await ProcessDependency.create({
+                    processId: newProcess.id,  // Здесь мы используем id созданного процесса
+                    DependencyId: dependencyId
+                });
+            }));
+        }
+
+        res.status(201).json(newProcess);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+        console.error('Error creating process:', error);
+        res.status(500).json({ error: error.message });
     }
-  }
+}
+
 
   static async getProcess(req, res) {
     try {
