@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const sequelize = require('../db'); 
-const bcrypt = require('bcrypt');
 
 // Определение модели Department
 class Department extends Model {}
@@ -12,7 +11,7 @@ Department.init({
   modelName: 'department',
 });
 
-// Определение модели Role
+// Определение модели Role (для общей роли пользователя в системе)
 class Role extends Model {}
 Role.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -20,6 +19,16 @@ Role.init({
 }, {
   sequelize,
   modelName: 'role',
+});
+
+// Определение модели ProjectRole (для ролей проекта)
+class ProjectRole extends Model {}
+ProjectRole.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  roleName: { type: DataTypes.STRING, unique: true, allowNull: false },
+}, {
+  sequelize,
+  modelName: 'projectrole',
 });
 
 // Определение модели User
@@ -64,8 +73,8 @@ ObjectModel.init({
   name: { type: DataTypes.STRING, unique: false },
   description: { type: DataTypes.STRING },
   type: { type: DataTypes.STRING },
-  startData: { type: DataTypes.DATE },
-  endData: { type: DataTypes.DATE },
+  startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+  endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   status: { type: DataTypes.STRING },
   departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
 }, {
@@ -80,7 +89,7 @@ Process.init({
   name: { type: DataTypes.STRING, unique: false },
   description: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-  endData: { type: DataTypes.DATE,defaultValue: Sequelize.NOW },
+  endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   workingTime: { type: DataTypes.STRING },
   status: { 
     type: DataTypes.ENUM('в ожидании', 'в работе', 'завершено', 'ожидание'), 
@@ -90,6 +99,18 @@ Process.init({
 }, {
   sequelize,
   modelName: 'process',
+});
+
+// Определение модели UserObjectRole (связь пользователя, объекта и роли проекта)
+class UserObjectRole extends Model {}
+UserObjectRole.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  userId: { type: DataTypes.INTEGER, references: { model: 'users', key: 'id' }},
+  objectId: { type: DataTypes.INTEGER, references: { model: 'objects', key: 'id' }},
+  projectRoleId: { type: DataTypes.INTEGER, references: { model: 'projectroles', key: 'id' }},
+}, {
+  sequelize,
+  modelName: 'UserObjectRole',
 });
 
 // Определение модели UserObjectAssociation
@@ -131,6 +152,11 @@ Process.belongsToMany(ObjectModel, { through: ObjectProcessAssociation });
 
 Process.belongsToMany(Process, { as: 'Dependencies', through: ProcessDependency });
 
+// Ассоциации для новой модели
+User.belongsToMany(ObjectModel, { through: UserObjectRole });
+ObjectModel.belongsToMany(User, { through: UserObjectRole });
+ProjectRole.belongsToMany(UserObjectRole, { through: UserObjectRole });
+
 // Экспорт моделей
 module.exports = {
   User,
@@ -141,4 +167,6 @@ module.exports = {
   UserObjectAssociation,
   ObjectProcessAssociation,
   ProcessDependency,
+  UserObjectRole,
+  ProjectRole, // Экспортируем новую модель ролей проекта
 };

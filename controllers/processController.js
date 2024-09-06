@@ -80,6 +80,43 @@ class ProcessController {
       res.status(400).json({ error: error.message });
     }
   }
+  static async getProcessesWithoutDependencies  (req, res) {
+    const objectId = req.params.objectId;
+    try {
+        const processes = await Process.findAll({
+            where: { objectId },
+            include: [{
+                model: ProcessDependency,
+                required: false, // LEFT JOIN
+                where: { DependencyId: null }
+            }]
+        });
+        res.json(processes);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching processes' });
+    }
+};
+static async startProcess (req, res) {
+  const processId = req.params.processId;
+  try {
+      // Обновляем статус процесса на "в работе"
+      await Process.update({ status: 'в работе' }, { where: { id: processId } });
+      
+      // Запускаем все процессы, которые зависят от данного
+      await ProcessDependency.findAll({ where: { DependencyId: processId } })
+          .then(dependencies => {
+              dependencies.forEach(async (dependency) => {
+                  await Process.update({ status: 'в работе' }, { where: { id: dependency.processId } });
+              });
+          });
+
+      res.json({ message: 'Process started successfully' });
+  } catch (error) {
+      res.status(500).json({ error: 'Error starting process' });
+  }
+};
+
+
 }
 
 module.exports = ProcessController;
