@@ -6,6 +6,7 @@ const processRoutes = require('./routes/processRoutes');
 const objectRoutes = require('./routes/ObjectModelControllerRoutes');
 const departmentsRoutes = require('./routes/departmentRoutes');
 const roleRoutes = require('./routes/roleRoutes');
+const statusRoutes = require('./routes/statusRoutes')
 const cors = require('cors');
 
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use('/api/processes', processRoutes);
 app.use('/api/objects', objectRoutes);
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/statusses',statusRoutes);
 
 const start = async () => {
     try {

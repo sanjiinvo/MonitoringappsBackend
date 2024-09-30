@@ -2,8 +2,9 @@ const { ObjectModel } = require('../models/models');
 
 class ObjectModelController {
   static async createObjectModel(req, res) {
+    const {departmentName, departmentDescription} = req.body
     try {
-      const objectModel = await ObjectModel.create(req.body);
+      const objectModel = await ObjectModel.create({departmentName, departmentDescription});
       res.status(201).json(objectModel);
     } catch (error) {
       res.status(400).json({ error: error.message });

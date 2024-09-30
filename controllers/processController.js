@@ -2,35 +2,32 @@ const { Process, ProcessDependency, Department, ObjectModel } = require('../mode
 
 
 class ProcessController {
-  static async createProcess(req, res, next) {
+  static async createProcess(req, res) {
+    const { name, description, workingTime, departmentId, dependencies, statusId } = req.body;
+
     try {
-        const { name, description, workingTime, departmentId, dependencies } = req.body;
+      // По умолчанию присваиваем статус "В ожидании" если не указан статус вручную
+      const status = statusId ? statusId : 1; // 1 - это статус "В ожидании"
 
-        // Создание самого процесса
-        const newProcess = await Process.create({
-            name,
-            description,
-            workingTime,
-            departmentId,
-            status: 'в ожидании'
-        });
+      const newProcess = await Process.create({
+        name,
+        description,
+        workingTime,
+        departmentId: departmentId !== "" ? departmentId : null, // Добавляем отдел, если указан
+        statusId: status // Устанавливаем статус для процесса
+      });
 
-        // Добавление зависимостей
-        if (dependencies && dependencies.length > 0) {
-            await Promise.all(dependencies.map(async (dependencyId) => {
-                await ProcessDependency.create({
-                    processId: newProcess.id,  // Здесь мы используем id созданного процесса
-                    DependencyId: dependencyId
-                });
-            }));
-        }
+      // Добавление зависимостей (если они указаны)
+      if (dependencies && dependencies.length > 0) {
+        await newProcess.setDependencies(dependencies);
+      }
 
-        res.status(201).json(newProcess);
+      res.status(201).json(newProcess);
     } catch (error) {
-        console.error('Error creating process:', error);
-        res.status(500).json({ error: error.message });
+      console.error('Error creating process:', error);
+      res.status(500).json({ error: 'Ошибка при создании процесса.' });
     }
-}
+  }
 
 
   static async getProcess(req, res) {
