@@ -8,6 +8,8 @@ const departmentsRoutes = require('./routes/departmentRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const statusRoutes = require('./routes/statusRoutes')
 const cors = require('cors');
+const { Department } = require('./models/models');
+const { FORCE } = require('sequelize/lib/index-hints');
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,9 +24,20 @@ app.use('/api/departments', departmentsRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/statusses',statusRoutes);
 
+async function recreateDepartmentTable() {
+    try {
+      // Пересоздание таблицы Department
+      await Department.sync({ force: true });
+      console.log('Таблица Department успешно пересоздана');
+    } catch (error) {
+      console.error('Ошибка при пересоздании таблицы Department:', error);
+    }
+  }
+
 const start = async () => {
     try {
         await sequelize.authenticate();
+        // recreateDepartmentTable()
         await sequelize.sync();
         
         const server = app.listen(PORT, () => {
