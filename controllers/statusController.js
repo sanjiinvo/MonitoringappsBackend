@@ -1,4 +1,4 @@
-const { Status } = require('../models/models'); // Импорт модели Status
+const { Status} = require('../models/models'); // Импорт модели Status
 
 class StatusController {
   // Получение всех статусов

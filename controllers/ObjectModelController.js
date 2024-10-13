@@ -1,13 +1,22 @@
 const { ObjectModel } = require('../models/models');
-
+const {Sequelize} = require('sequelize')
 class ObjectModelController {
   static async createObjectModel(req, res) {
-    const {departmentName, departmentDescription} = req.body
+    const { name, description, type, statusId } = req.body;
+
     try {
-      const objectModel = await ObjectModel.create({departmentName, departmentDescription});
+      const defaultStatusId = statusId || 1; // Устанавливаем статус по умолчанию, если statusId не передан
+      const objectModel = await ObjectModel.create({
+        name,
+        description,
+        type,
+        statusId: defaultStatusId,
+      });
+
       res.status(201).json(objectModel);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      console.error('Ошибка при создании объекта:', error);
+      res.status(400).json({ error: 'Ошибка при создании объекта.' });
     }
   }
 

@@ -1,20 +1,23 @@
-const { Process, ProcessDependency, Department, ObjectModel } = require('../models/models');
-
+const { Process, ProcessDependency, Department, ObjectModel, Status } = require('../models/models');
 
 class ProcessController {
   static async createProcess(req, res) {
-    const { name, description, workingTime, departmentId, dependencies, statusId } = req.body;
+    const { name, description, workingTime, departmentId, dependencies } = req.body;
 
     try {
-      // По умолчанию присваиваем статус "В ожидании" если не указан статус вручную
-      const status = statusId ? statusId : 1; // 1 - это статус "В ожидании"
+      // Поиск ID статуса "Не начат" (вместо фиксированного значения)
+      const defaultStatus = await Status.findOne({ where: { statusName: 'Не начат' } });
+
+      if (!defaultStatus) {
+        return res.status(500).json({ error: 'Статус "Не начат" не найден. Проверьте таблицу статусов.' });
+      }
 
       const newProcess = await Process.create({
         name,
         description,
         workingTime,
-        departmentId: departmentId !== "" ? departmentId : null, // Добавляем отдел, если указан
-        statusId: status // Устанавливаем статус для процесса
+        departmentId: departmentId || null, // Добавляем отдел, если указан
+        statusId: defaultStatus.id // Устанавливаем статус "Не начат" для процесса
       });
 
       // Добавление зависимостей (если они указаны)
@@ -29,7 +32,6 @@ class ProcessController {
     }
   }
 
-
   static async getProcess(req, res) {
     try {
       const process = await Process.findByPk(req.params.id);
@@ -42,6 +44,7 @@ class ProcessController {
       res.status(400).json({ error: error.message });
     }
   }
+
   static async getAllProcesses(req, res) {
     try {
       const processes = await Process.findAll();
@@ -50,6 +53,7 @@ class ProcessController {
       res.status(400).json({ error: error.message });
     }
   }
+
   static async updateProcess(req, res) {
     try {
       const process = await Process.findByPk(req.params.id);
@@ -77,43 +81,49 @@ class ProcessController {
       res.status(400).json({ error: error.message });
     }
   }
-  static async getProcessesWithoutDependencies  (req, res) {
+
+  static async getProcessesWithoutDependencies(req, res) {
     const objectId = req.params.objectId;
     try {
-        const processes = await Process.findAll({
-            where: { objectId },
-            include: [{
-                model: ProcessDependency,
-                required: false, // LEFT JOIN
-                where: { DependencyId: null }
-            }]
-        });
-        res.json(processes);
+      const processes = await Process.findAll({
+        where: { objectId },
+        include: [{
+          model: ProcessDependency,
+          required: false, // LEFT JOIN
+          where: { DependencyId: null }
+        }]
+      });
+      res.json(processes);
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching processes' });
+      res.status(500).json({ error: 'Error fetching processes' });
     }
-};
-static async startProcess (req, res) {
-  const processId = req.params.processId;
-  try {
-      // Обновляем статус процесса на "в работе"
-      await Process.update({ status: 'в работе' }, { where: { id: processId } });
-      
+  }
+
+  static async startProcess(req, res) {
+    const processId = req.params.processId;
+    try {
+      // Поиск ID статуса "В процессе"
+      const inProgressStatus = await Status.findOne({ where: { statusName: 'В процессе' } });
+
+      if (!inProgressStatus) {
+        return res.status(500).json({ error: 'Статус "В процессе" не найден. Проверьте таблицу статусов.' });
+      }
+
+      // Обновляем статус процесса на "В процессе"
+      await Process.update({ statusId: inProgressStatus.id }, { where: { id: processId } });
+
       // Запускаем все процессы, которые зависят от данного
-      await ProcessDependency.findAll({ where: { DependencyId: processId } })
-          .then(dependencies => {
-              dependencies.forEach(async (dependency) => {
-                  await Process.update({ status: 'в работе' }, { where: { id: dependency.processId } });
-              });
-          });
+      const dependentProcesses = await ProcessDependency.findAll({ where: { DependencyId: processId } });
+
+      for (const dependency of dependentProcesses) {
+        await Process.update({ statusId: inProgressStatus.id }, { where: { id: dependency.processId } });
+      }
 
       res.json({ message: 'Process started successfully' });
-  } catch (error) {
+    } catch (error) {
       res.status(500).json({ error: 'Error starting process' });
+    }
   }
-};
-
-
 }
 
 module.exports = ProcessController;

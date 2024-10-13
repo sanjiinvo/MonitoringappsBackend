@@ -12,7 +12,7 @@ class UserController {
       const hashedPassword = await bcrypt.hash(password, 10)
       // Создаем пользователя с хешированным паролем
       const role = await Role.findByPk(roleId);
-        let rolename = 'User';
+        let rolename 
 
         if(role){
             rolename = role.roleName;

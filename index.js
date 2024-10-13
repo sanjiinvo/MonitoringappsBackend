@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { exec } = require('child_process');
 const express = require('express');
 const sequelize = require('./db');
 const userRoutes = require('./routes/userRoute');
@@ -39,6 +40,23 @@ const start = async () => {
         await sequelize.authenticate();
         // recreateDepartmentTable()
         await sequelize.sync();
+        
+        // await sequelize.sync({ force: true });
+
+        // // Запуск seed-скрипта для начального заполнения базы данных
+        // exec('node seed.js', (error, stdout, stderr) => {
+        //     if (error) {
+        //         console.error(`Ошибка при запуске seed-скрипта: ${error.message}`);
+        //         return;
+        //     }
+        //     if (stderr) {
+        //         console.error(`Ошибка при выполнении seed-скрипта: ${stderr}`);
+        //         return;
+        //     }
+        //     console.log(`Результат seed-скрипта: ${stdout}`);
+        // })
+
+
         
         const server = app.listen(PORT, () => {
             let host = server.address().address;

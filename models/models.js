@@ -1,19 +1,27 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const sequelize = require('../db');
-const bcrypt = require('bcrypt');
 
-// Модель для отделов
+// Определение модели Department
 class Department extends Model {}
 Department.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   departmentName: { type: DataTypes.STRING, allowNull: false },
-
 }, {
   sequelize,
   modelName: 'department',
 });
 
-// Модель для ролей
+// Определение модели Status
+class Status extends Model {}
+Status.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  statusName: { type: DataTypes.STRING, unique: true }
+}, {
+  sequelize,
+  modelName: 'status',
+});
+
+// Определение модели Role (для общей роли пользователя в системе)
 class Role extends Model {}
 Role.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -23,8 +31,19 @@ Role.init({
   modelName: 'role',
 });
 
-// Модель для пользователей
+// Определение модели ProjectRole (для ролей проекта)
+class ProjectRole extends Model {}
+ProjectRole.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  roleName: { type: DataTypes.STRING, unique: true, allowNull: false },
+}, {
+  sequelize,
+  modelName: 'projectrole',
+});
+
+// Определение модели User
 class User extends Model {}
+
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: true },
@@ -35,7 +54,7 @@ User.init({
   },
   rolename: { 
     type: DataTypes.STRING, 
-    defaultValue: 'User'
+    defaultValue: 'User' 
   },
   roleId: { 
     type: DataTypes.INTEGER, 
@@ -51,60 +70,69 @@ User.init({
   modelName: 'user',
 });
 
-// Модель для статусов
-class Status extends Model {}
-Status.init({
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  name: { type: DataTypes.STRING, allowNull: false, unique: true },
-  description: { type: DataTypes.STRING },  // Описание статуса
-}, {
-  sequelize,
-  modelName: 'status',
-});
-
-// Модель для объектов строительства
+// Определение модели ObjectModel
 class ObjectModel extends Model {}
 ObjectModel.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  name: { type: DataTypes.STRING, unique: false },
+  name: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
   type: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-  departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},  // Ссылка на статус объекта
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }}, // Внешний ключ для статуса
 }, {
   sequelize,
   modelName: 'object',
 });
 
-// Модель для процессов
+// Определение модели Process
 class Process extends Model {}
 Process.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  name: { type: DataTypes.STRING, unique: false },
+  name: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-  workingTime: { type: DataTypes.STRING }, // Ожидаемое время выполнения
+  workingTime: { type: DataTypes.STRING },
   departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},  // Ссылка на статус процесса
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }}, // Внешний ключ для статуса
 }, {
   sequelize,
   modelName: 'process',
 });
 
-// Модель для связи объектов и пользователей (многие ко многим)
+// Определение модели UserObjectRole (связь пользователя, объекта и роли проекта)
+class UserObjectRole extends Model {}
+UserObjectRole.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  userId: { type: DataTypes.INTEGER, references: { model: 'users', key: 'id' }},
+  objectId: { type: DataTypes.INTEGER, references: { model: 'objects', key: 'id' }},
+  projectRoleId: { type: DataTypes.INTEGER, references: { model: 'projectroles', key: 'id' }},
+}, {
+  sequelize,
+  modelName: 'UserObjectRole',
+});
+
+// Определение модели UserObjectAssociation
 class UserObjectAssociation extends Model {}
 UserObjectAssociation.init({}, {
   sequelize,
   modelName: 'UserObjectAssociation',
 });
 
-// Модель для связи объектов и процессов (многие ко многим)
+// Определение модели ObjectProcessAssociation
+// Определение модели ObjectProcessAssociation
 class ObjectProcessAssociation extends Model {}
 ObjectProcessAssociation.init({
-  status: { type: DataTypes.STRING, allowNull: false, defaultValue: 'Не начат' },
+  statusId: { 
+    type: DataTypes.INTEGER,
+    references: { 
+      model: Status,
+      key: 'id'
+    },
+    allowNull: false,
+    defaultValue: 1 // По умолчанию статус "Не начат"
+  },
   startDate: { type: DataTypes.DATE },
   endDate: { type: DataTypes.DATE },
 }, {
@@ -112,20 +140,20 @@ ObjectProcessAssociation.init({
   modelName: 'ObjectProcessAssociation',
 });
 
-// Модель для зависимостей процессов (многие ко многим)
+// Определение модели ProcessDependency
 class ProcessDependency extends Model {}
 ProcessDependency.init({}, {
   sequelize,
   modelName: 'ProcessDependency',
 });
 
-// Ассоциации моделей
+// Ассоциации
 User.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });
 User.belongsTo(Department, { foreignKey: 'departmentId' });
 ObjectModel.belongsTo(Department, { foreignKey: 'departmentId' });
-ObjectModel.belongsTo(Status, { foreignKey: 'statusId' }); // Связь объекта со статусом
+ObjectModel.belongsTo(Status, { foreignKey: 'statusId' }); // Связь с моделью Status
 Process.belongsTo(Department, { foreignKey: 'departmentId' });
-Process.belongsTo(Status, { foreignKey: 'statusId' }); // Связь процесса со статусом
+Process.belongsTo(Status, { foreignKey: 'statusId' }); // Связь с моделью Status
 
 User.belongsToMany(ObjectModel, { through: UserObjectAssociation });
 ObjectModel.belongsToMany(User, { through: UserObjectAssociation });
@@ -133,7 +161,12 @@ ObjectModel.belongsToMany(User, { through: UserObjectAssociation });
 ObjectModel.belongsToMany(Process, { through: ObjectProcessAssociation });
 Process.belongsToMany(ObjectModel, { through: ObjectProcessAssociation });
 
-Process.belongsToMany(Process, { as: 'Dependencies', through: ProcessDependency }); // Процесс может зависеть от другого процесса
+Process.belongsToMany(Process, { as: 'Dependencies', through: ProcessDependency });
+
+// Ассоциации для новой модели
+User.belongsToMany(ObjectModel, { through: UserObjectRole });
+ObjectModel.belongsToMany(User, { through: UserObjectRole });
+ProjectRole.belongsToMany(UserObjectRole, { through: UserObjectRole });
 
 // Экспорт моделей
 module.exports = {
@@ -146,4 +179,6 @@ module.exports = {
   UserObjectAssociation,
   ObjectProcessAssociation,
   ProcessDependency,
+  UserObjectRole,
+  ProjectRole,
 };
