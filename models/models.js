@@ -43,7 +43,6 @@ ProjectRole.init({
 
 // Определение модели User
 class User extends Model {}
-
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   username: { type: DataTypes.STRING, unique: true },
@@ -85,6 +84,20 @@ ObjectModel.init({
   modelName: 'object',
 });
 
+// Определение модели MainProcess
+class MainProcess extends Model {}
+MainProcess.init({
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING },
+  description: { type: DataTypes.STRING },
+  startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+  endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},
+}, {
+  sequelize,
+  modelName: 'main_process',
+});
+
 // Определение модели Process
 class Process extends Model {}
 Process.init({
@@ -95,13 +108,13 @@ Process.init({
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   workingTime: { type: DataTypes.STRING },
   departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }}, // Внешний ключ для статуса
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},
 }, {
   sequelize,
   modelName: 'process',
 });
 
-// Определение модели UserObjectRole (связь пользователя, объекта и роли проекта)
+// Определение модели UserObjectRole
 class UserObjectRole extends Model {}
 UserObjectRole.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -121,7 +134,6 @@ UserObjectAssociation.init({}, {
 });
 
 // Определение модели ObjectProcessAssociation
-// Определение модели ObjectProcessAssociation
 class ObjectProcessAssociation extends Model {}
 ObjectProcessAssociation.init({
   statusId: { 
@@ -140,6 +152,13 @@ ObjectProcessAssociation.init({
   modelName: 'ObjectProcessAssociation',
 });
 
+// Определение модели MainProcessDependency
+class MainProcessDependency extends Model {}
+MainProcessDependency.init({}, {
+  sequelize,
+  modelName: 'MainProcessDependency',
+});
+
 // Определение модели ProcessDependency
 class ProcessDependency extends Model {}
 ProcessDependency.init({}, {
@@ -151,17 +170,25 @@ ProcessDependency.init({}, {
 User.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });
 User.belongsTo(Department, { foreignKey: 'departmentId' });
 ObjectModel.belongsTo(Department, { foreignKey: 'departmentId' });
-ObjectModel.belongsTo(Status, { foreignKey: 'statusId' }); // Связь с моделью Status
+ObjectModel.belongsTo(Status, { foreignKey: 'statusId' });
 Process.belongsTo(Department, { foreignKey: 'departmentId' });
-Process.belongsTo(Status, { foreignKey: 'statusId' }); // Связь с моделью Status
+Process.belongsTo(Status, { foreignKey: 'statusId' });
+MainProcess.belongsTo(Department, { foreignKey: 'departmentId' });
+MainProcess.belongsTo(Status, { foreignKey: 'statusId' });
 
+// Ассоциации для связи пользователей и объектов
 User.belongsToMany(ObjectModel, { through: UserObjectAssociation });
 ObjectModel.belongsToMany(User, { through: UserObjectAssociation });
 
+// Связи между объектами и процессами
+ObjectModel.belongsToMany(MainProcess, { through: ObjectProcessAssociation });
+MainProcess.belongsToMany(ObjectModel, { through: ObjectProcessAssociation });
 ObjectModel.belongsToMany(Process, { through: ObjectProcessAssociation });
 Process.belongsToMany(ObjectModel, { through: ObjectProcessAssociation });
 
+// Ассоциации для зависимостей процессов
 Process.belongsToMany(Process, { as: 'Dependencies', through: ProcessDependency });
+MainProcess.belongsToMany(Process, { as: 'SubProcesses', through: MainProcessDependency });
 
 // Ассоциации для новой модели
 User.belongsToMany(ObjectModel, { through: UserObjectRole });
@@ -175,10 +202,12 @@ module.exports = {
   Department,
   Status,
   ObjectModel,
+  MainProcess,
   Process,
   UserObjectAssociation,
   ObjectProcessAssociation,
   ProcessDependency,
+  MainProcessDependency,
   UserObjectRole,
   ProjectRole,
 };

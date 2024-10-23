@@ -39,7 +39,7 @@ const start = async () => {
     try {
         await sequelize.authenticate();
         // recreateDepartmentTable()
-        await sequelize.sync();
+        await sequelize.sync({forc: true});
         
         // await sequelize.sync({ force: true });
 
