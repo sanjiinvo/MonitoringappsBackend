@@ -1,4 +1,4 @@
-const { Status} = require('../models/models'); // Импорт модели Status
+const { Status } = require('../models/models'); // Импорт модели Status
 
 class StatusController {
   // Получение всех статусов
@@ -27,14 +27,14 @@ class StatusController {
 
   // Создание нового статуса
   static async createStatus(req, res) {
-    const { name, description } = req.body;
+    const { statusName } = req.body;
     try {
-      const existingStatus = await Status.findOne({ where: { name } });
+      const existingStatus = await Status.findOne({ where: { statusName } });
       if (existingStatus) {
         return res.status(400).json({ error: 'Статус с таким именем уже существует.' });
       }
 
-      const newStatus = await Status.create({ name, description });
+      const newStatus = await Status.create({ statusName });
       res.status(201).json(newStatus);
     } catch (error) {
       res.status(500).json({ error: 'Ошибка при создании статуса.' });
@@ -44,7 +44,7 @@ class StatusController {
   // Обновление существующего статуса
   static async updateStatus(req, res) {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { statusName } = req.body;
     try {
       const status = await Status.findByPk(id);
       if (!status) {
@@ -52,8 +52,7 @@ class StatusController {
       }
 
       // Обновляем статус
-      status.name = name || status.name;
-      status.description = description || status.description;
+      status.statusName = statusName || status.statusName;
       await status.save();
 
       res.status(200).json(status);

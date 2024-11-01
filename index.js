@@ -8,6 +8,7 @@ const objectRoutes = require('./routes/ObjectModelControllerRoutes');
 const departmentsRoutes = require('./routes/departmentRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const statusRoutes = require('./routes/statusRoutes')
+const mainProcessRoutes = require('./routes/mainProcessRoutes')
 const cors = require('cors');
 const { Department } = require('./models/models');
 const { FORCE } = require('sequelize/lib/index-hints');
@@ -24,6 +25,7 @@ app.use('/api/objects', objectRoutes);
 app.use('/api/departments', departmentsRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/statusses',statusRoutes);
+app.use('/api/mainprocesses',mainProcessRoutes)
 
 async function recreateDepartmentTable() {
     try {
@@ -39,22 +41,22 @@ const start = async () => {
     try {
         await sequelize.authenticate();
         // recreateDepartmentTable()
-        await sequelize.sync({forc: true});
+        await sequelize.sync({force: true});
         
-        // await sequelize.sync({ force: true });
+        await sequelize.sync({ force: true });
 
-        // // Запуск seed-скрипта для начального заполнения базы данных
-        // exec('node seed.js', (error, stdout, stderr) => {
-        //     if (error) {
-        //         console.error(`Ошибка при запуске seed-скрипта: ${error.message}`);
-        //         return;
-        //     }
-        //     if (stderr) {
-        //         console.error(`Ошибка при выполнении seed-скрипта: ${stderr}`);
-        //         return;
-        //     }
-        //     console.log(`Результат seed-скрипта: ${stdout}`);
-        // })
+        // Запуск seed-скрипта для начального заполнения базы данных
+        exec('node seed.js', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Ошибка при запуске seed-скрипта: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(`Ошибка при выполнении seed-скрипта: ${stderr}`);
+                return;
+            }
+            console.log(`Результат seed-скрипта: ${stdout}`);
+        })
 
 
         

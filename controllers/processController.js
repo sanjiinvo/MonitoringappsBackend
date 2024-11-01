@@ -17,7 +17,6 @@ class ProcessController {
         description,
         workingTime,
         departmentId: departmentId || null, // Добавляем отдел, если указан
-        statusId: defaultStatus.id // Устанавливаем статус "Не начат" для процесса
       });
 
       // Добавление зависимостей (если они указаны)

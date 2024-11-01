@@ -51,7 +51,6 @@ ObjectModel.init({
   type: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},
 }, { sequelize, modelName: 'object' });
 
 // Определение модели MainProcess
@@ -62,7 +61,6 @@ MainProcess.init({
   description: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},
 }, { sequelize, modelName: 'main_process' });
 
 // Определение модели Process
@@ -75,7 +73,6 @@ Process.init({
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   workingTime: { type: DataTypes.STRING },
   departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }},
 }, { sequelize, modelName: 'process' });
 
 // Новая таблица для хранения статусов процессов и объектов
@@ -83,9 +80,9 @@ class ObjectProcessStatus extends Model {}
 ObjectProcessStatus.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   objectId: { type: DataTypes.INTEGER, references: { model: ObjectModel, key: 'id' }, allowNull: false, onDelete: 'CASCADE' },
-  processId: { type: DataTypes.INTEGER, allowNull: true, references: { model: Process, key: 'id' }, onDelete: 'CASCADE' },  // Для обычных процессов
-  mainProcessId: { type: DataTypes.INTEGER, allowNull: true, references: { model: MainProcess, key: 'id' }, onDelete: 'CASCADE' },  // Для главных процессов
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }, allowNull: false, defaultValue: 1 },  // Статус для этого процесса в рамках объекта
+  processId: { type: DataTypes.INTEGER, allowNull: true, references: { model: Process, key: 'id' }, onDelete: 'CASCADE' },
+  mainProcessId: { type: DataTypes.INTEGER, allowNull: true, references: { model: MainProcess, key: 'id' }, onDelete: 'CASCADE' },
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }, allowNull: false, defaultValue: 1 },
   startDate: { type: DataTypes.DATE },
   endDate: { type: DataTypes.DATE },
 }, { sequelize, modelName: 'object_process_status' });

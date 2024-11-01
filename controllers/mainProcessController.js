@@ -1,4 +1,4 @@
-const { MainProcess, Department, Status, Process } = require('../models/models');
+const { MainProcess, Department, Process } = require('../models/models');
 
 class MainProcessController {
   
@@ -8,7 +8,6 @@ class MainProcessController {
       const mainProcesses = await MainProcess.findAll({
         include: [
           { model: Department, attributes: ['departmentName'] },
-          { model: Status, attributes: ['statusName'] }
         ]
       });
       res.status(200).json(mainProcesses);
@@ -24,7 +23,6 @@ class MainProcessController {
       const mainProcess = await MainProcess.findByPk(id, {
         include: [
           { model: Department, attributes: ['departmentName'] },
-          { model: Status, attributes: ['statusName'] },
           { model: Process, as: 'SubProcesses' }
         ]
       });
@@ -42,13 +40,12 @@ class MainProcessController {
   // Создание нового главного процесса
   static async createMainProcess(req, res) {
     try {
-      const { name, description, departmentId, statusId, subProcesses } = req.body;
+      const { name, description, departmentId, subProcesses } = req.body;
       
       const mainProcess = await MainProcess.create({ 
         name, 
         description, 
-        departmentId, 
-        statusId 
+        departmentId
       });
 
       if (subProcesses && subProcesses.length > 0) {
@@ -65,7 +62,7 @@ class MainProcessController {
   static async updateMainProcess(req, res) {
     try {
       const { id } = req.params;
-      const { name, description, departmentId, statusId, subProcesses } = req.body;
+      const { name, description, departmentId, subProcesses } = req.body;
       
       const mainProcess = await MainProcess.findByPk(id);
 
@@ -73,7 +70,7 @@ class MainProcessController {
         return res.status(404).json({ error: 'Главный процесс не найден.' });
       }
 
-      await mainProcess.update({ name, description, departmentId, statusId });
+      await mainProcess.update({ name, description, departmentId });
 
       if (subProcesses && subProcesses.length > 0) {
         await mainProcess.setSubProcesses(subProcesses);
