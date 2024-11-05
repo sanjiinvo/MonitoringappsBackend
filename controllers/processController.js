@@ -2,32 +2,33 @@ const { Process, ProcessDependency, Department, ObjectModel, Status } = require(
 
 class ProcessController {
   static async createProcess(req, res) {
-    const { name, description, workingTime, departmentId, dependencies } = req.body;
+    const { name, description, workingTime, departmentId, dependencies, mainProcessDependency } = req.body;
 
     try {
-      // Поиск ID статуса "Не начат" (вместо фиксированного значения)
-      const defaultStatus = await Status.findOne({ where: { statusName: 'Не начат' } });
-
-      if (!defaultStatus) {
-        return res.status(500).json({ error: 'Статус "Не начат" не найден. Проверьте таблицу статусов.' });
-      }
-
       const newProcess = await Process.create({
         name,
         description,
         workingTime,
-        departmentId: departmentId || null, // Добавляем отдел, если указан
+        departmentId: departmentId || null,
       });
 
-      // Добавление зависимостей (если они указаны)
+      // Устанавливаем зависимости с другими обычными процессами
       if (dependencies && dependencies.length > 0) {
-        await newProcess.setDependencies(dependencies);
+        await newProcess.addDependencies(dependencies);
+      }
+
+      // Устанавливаем зависимость от главного процесса, если он указан
+      if (mainProcessDependency) {
+        const mainProcess = await MainProcess.findByPk(mainProcessDependency);
+        if (mainProcess) {
+          await newProcess.addMainProcess(mainProcess);
+        }
       }
 
       res.status(201).json(newProcess);
     } catch (error) {
-      console.error('Error creating process:', error);
-      res.status(500).json({ error: 'Ошибка при создании процесса.' });
+      console.error("Ошибка при создании процесса:", error);
+      res.status(500).json({ error: "Ошибка при создании процесса." });
     }
   }
 
