@@ -1,35 +1,35 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const sequelize = require('../db');
 
-// Определение модели Department
+// Модель Department
 class Department extends Model {}
 Department.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   departmentName: { type: DataTypes.STRING, allowNull: false },
 }, { sequelize, modelName: 'department' });
 
-// Определение модели Status
+// Модель Status
 class Status extends Model {}
 Status.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   statusName: { type: DataTypes.STRING, unique: true },
 }, { sequelize, modelName: 'status' });
 
-// Определение модели Role
+// Модель Role
 class Role extends Model {}
 Role.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   roleName: { type: DataTypes.STRING, unique: true },
 }, { sequelize, modelName: 'role' });
 
-// Определение модели ProjectRole
+// Модель ProjectRole
 class ProjectRole extends Model {}
 ProjectRole.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   roleName: { type: DataTypes.STRING, unique: true, allowNull: false },
 }, { sequelize, modelName: 'projectrole' });
 
-// Определение модели User
+// Модель User
 class User extends Model {}
 User.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -42,18 +42,20 @@ User.init({
   currentprocesses: { type: DataTypes.ARRAY(DataTypes.STRING) },
 }, { sequelize, modelName: 'user' });
 
-// Определение модели ObjectModel
+// Модель ObjectModel
 class ObjectModel extends Model {}
 ObjectModel.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  processTableName:{ type: DataTypes.STRING},
   name: { type: DataTypes.STRING },
   description: { type: DataTypes.STRING },
   type: { type: DataTypes.STRING },
   startData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
+  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' } },
 }, { sequelize, modelName: 'object' });
 
-// Определение модели MainProcess
+// Модель MainProcess
 class MainProcess extends Model {}
 MainProcess.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -63,7 +65,7 @@ MainProcess.init({
   endData: { type: DataTypes.DATE, defaultValue: Sequelize.NOW },
 }, { sequelize, modelName: 'main_process' });
 
-// Определение модели Process
+// Модель Process
 class Process extends Model {}
 Process.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -75,19 +77,49 @@ Process.init({
   departmentId: { type: DataTypes.INTEGER, references: { model: Department, key: 'id' }},
 }, { sequelize, modelName: 'process' });
 
-// Новая таблица для хранения статусов процессов и объектов
-class ObjectProcessStatus extends Model {}
-ObjectProcessStatus.init({
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  objectId: { type: DataTypes.INTEGER, references: { model: ObjectModel, key: 'id' }, allowNull: false, onDelete: 'CASCADE' },
-  processId: { type: DataTypes.INTEGER, allowNull: true, references: { model: Process, key: 'id' }, onDelete: 'CASCADE' },
-  mainProcessId: { type: DataTypes.INTEGER, allowNull: true, references: { model: MainProcess, key: 'id' }, onDelete: 'CASCADE' },
-  statusId: { type: DataTypes.INTEGER, references: { model: Status, key: 'id' }, allowNull: false, defaultValue: 1 },
-  startDate: { type: DataTypes.DATE },
-  endDate: { type: DataTypes.DATE },
-}, { sequelize, modelName: 'object_process_status' });
+// Модель ObjectProcessStatus для отслеживания статусов процессов в объектах
+// class ObjectProcessStatus extends Model {}
 
-// Определение модели UserObjectRole
+// // ObjectProcessStatus.init({
+// //   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+// //   objectId: { 
+// //     type: DataTypes.INTEGER, 
+// //     references: { model: ObjectModel, key: 'id' }, 
+// //     allowNull: false, 
+// //     onDelete: 'CASCADE' 
+// //   },
+// //   processId: { 
+// //     type: DataTypes.INTEGER, 
+// //     allowNull: true, 
+// //     references: { model: Process, key: 'id' }, 
+// //     onDelete: 'CASCADE' 
+// //   },
+// //   mainProcessId: { 
+// //     type: DataTypes.INTEGER, 
+// //     allowNull: true, 
+// //     references: { model: MainProcess, key: 'id' }, 
+// //     onDelete: 'CASCADE' 
+// //   },
+// //   statusId: { 
+// //     type: DataTypes.INTEGER, 
+// //     references: { model: Status, key: 'id' }, 
+// //     allowNull: false, 
+// //     defaultValue: 1 
+// //   },
+// //   startDate: { type: DataTypes.DATE },
+// //   endDate: { type: DataTypes.DATE },
+// // }, { 
+// //   sequelize, 
+// //   modelName: 'object_process_status',
+// //   indexes: [
+// //     {
+// //       unique: true,
+// //       fields: ['objectId', 'processId']  // Уникальное ограничение на комбинацию objectId и processId
+// //     }
+// //   ]
+// // });
+
+// Модель UserObjectRole
 class UserObjectRole extends Model {}
 UserObjectRole.init({
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -96,11 +128,11 @@ UserObjectRole.init({
   projectRoleId: { type: DataTypes.INTEGER, references: { model: ProjectRole, key: 'id' }},
 }, { sequelize, modelName: 'user_object_role' });
 
-// Определение модели MainProcessDependency
+// Модель MainProcessDependency для связей между главным процессом и обычными процессами
 class MainProcessDependency extends Model {}
 MainProcessDependency.init({}, { sequelize, modelName: 'main_process_dependency' });
 
-// Определение модели ProcessDependency
+// Модель ProcessDependency для связей между обычными процессами
 class ProcessDependency extends Model {}
 ProcessDependency.init({}, { sequelize, modelName: 'process_dependency' });
 
@@ -110,13 +142,13 @@ User.belongsTo(Department, { foreignKey: 'departmentId' });
 ObjectModel.belongsTo(Department, { foreignKey: 'departmentId' });
 ObjectModel.belongsTo(Status, { foreignKey: 'statusId' });
 
-// Ассоциации между объектами и процессами
-ObjectModel.belongsToMany(Process, { through: ObjectProcessStatus, foreignKey: 'objectId' });
-ObjectModel.belongsToMany(MainProcess, { through: ObjectProcessStatus, foreignKey: 'objectId' });
-Process.belongsToMany(ObjectModel, { through: ObjectProcessStatus, foreignKey: 'processId' });
-MainProcess.belongsToMany(ObjectModel, { through: ObjectProcessStatus, foreignKey: 'mainProcessId' });
+// Ассоциации между объектами и процессами через ObjectProcessStatus
+// ObjectModel.belongsToMany(Process, { through: ObjectProcessStatus, foreignKey: 'objectId' });
+// ObjectModel.belongsToMany(MainProcess, { through: ObjectProcessStatus, foreignKey: 'objectId' });
+// Process.belongsToMany(ObjectModel, { through: ObjectProcessStatus, foreignKey: 'processId' });
+// MainProcess.belongsToMany(ObjectModel, { through: ObjectProcessStatus, foreignKey: 'mainProcessId' });
 
-// Ассоциации для зависимостей процессов
+// Ассоциации для зависимостей между процессами
 Process.belongsToMany(Process, { as: 'Dependencies', through: ProcessDependency });
 MainProcess.belongsToMany(Process, { as: 'SubProcesses', through: MainProcessDependency });
 
@@ -129,7 +161,7 @@ module.exports = {
   ObjectModel,
   MainProcess,
   Process,
-  ObjectProcessStatus,
+  // ObjectProcessStatus,
   UserObjectRole,
   MainProcessDependency,
   ProcessDependency,

@@ -1,10 +1,11 @@
-const { Process, ProcessDependency, Department, ObjectModel, Status } = require('../models/models');
+const { Process, ProcessDependency, Department, ObjectModel, Status, MainProcess, MainProcessDependency } = require('../models/models');
 
 class ProcessController {
   static async createProcess(req, res) {
     const { name, description, workingTime, departmentId, dependencies, mainProcessDependency } = req.body;
 
     try {
+      // Создаем новый процесс
       const newProcess = await Process.create({
         name,
         description,
@@ -19,10 +20,10 @@ class ProcessController {
 
       // Устанавливаем зависимость от главного процесса, если он указан
       if (mainProcessDependency) {
-        const mainProcess = await MainProcess.findByPk(mainProcessDependency);
-        if (mainProcess) {
-          await newProcess.addMainProcess(mainProcess);
-        }
+        await MainProcessDependency.create({
+          mainProcessId: mainProcessDependency,
+          processId: newProcess.id,
+        });
       }
 
       res.status(201).json(newProcess);
@@ -31,7 +32,6 @@ class ProcessController {
       res.status(500).json({ error: "Ошибка при создании процесса." });
     }
   }
-
   static async getProcess(req, res) {
     try {
       const process = await Process.findByPk(req.params.id);

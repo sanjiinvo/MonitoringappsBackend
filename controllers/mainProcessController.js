@@ -6,9 +6,7 @@ class MainProcessController {
   static async getAllMainProcesses(req, res) {
     try {
       const mainProcesses = await MainProcess.findAll({
-        include: [
-          { model: Department, attributes: ['departmentName'] },
-        ]
+  
       });
       res.status(200).json(mainProcesses);
     } catch (error) {
