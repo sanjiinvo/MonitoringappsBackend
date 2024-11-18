@@ -1,4 +1,4 @@
-const { ObjectModel, Process, MainProcess, ObjectProcessStatus, Status } = require('../models/models');
+const { ObjectModel, Process, MainProcess, ObjectProcessStatus, Status, MainProcessDependency } = require('../models/models');
 const sequelize = require('../db');
 const { DataTypes,Op } = require('sequelize');
 class ObjectModelController {
@@ -249,6 +249,60 @@ static async GetInfoOfObjectById(req, res) {
       res.status(400).json({ error: error.message });
     }
   }
+
+// обновления главного статуса у объекта ObjectModelController
+static async updateProcessStatus(req, res) {
+  const { objectId, processId, mainProcessId, newStatusId } = req.body;
+
+  try {
+      // Получаем динамическую модель через middleware
+      const dynamicModel = req.dynamicModel;
+
+      if (!dynamicModel) {
+          return res.status(500).json({ error: 'Динамическая модель не была найдена' });
+      }
+
+      // Условия для определения, обновлять процесс или главный процесс
+      const whereClause = processId
+          ? { objectId, processId }
+          : { objectId, mainProcessId };
+
+      // Выполняем обновление статуса для главного процесса или процесса
+      const [updatedRows] = await dynamicModel.update(
+          { statusId: newStatusId },
+          { where: whereClause }
+      );
+
+      if (updatedRows === 0) {
+          return res.status(404).json({ error: 'Запись для обновления не найдена' });
+      }
+
+      // Если обновляем главный процесс, ищем и обновляем зависимые процессы
+      if (mainProcessId && newStatusId === 2) { // Проверяем, что процесс "начат"
+          // Ищем обычные процессы, зависящие от данного главного процесса
+          const dependentProcesses = await MainProcessDependency.findAll({
+              where: { mainProcessId },
+              attributes: ['processId']
+          });
+
+          // Обновляем статус на "начат" для зависимых процессов в dynamicModel
+          for (const dependency of dependentProcesses) {
+              await dynamicModel.update(
+                  { statusId: newStatusId },
+                  { where: { objectId, processId: dependency.processId, statusId: 1 } } // только если процесс "не начат"
+              );
+          }
+      }
+
+      res.status(200).json({ message: 'Статус успешно обновлен и зависимости обновлены' });
+  } catch (error) {
+      console.error('Ошибка при обновлении статуса процесса:', error);
+      res.status(500).json({ error: 'Ошибка при обновлении статуса процесса' });
+  }
+}
+
+
+  
 }
 
 module.exports = ObjectModelController;
